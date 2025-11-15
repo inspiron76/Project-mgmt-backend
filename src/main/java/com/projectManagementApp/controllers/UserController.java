@@ -86,12 +86,12 @@ public class UserController {
 	        errorResponse.setMessage("Failed to send reset email. Please try again later.");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	            
-	    } catch (Exception e) {
-	        ApiResponse<String> errorResponse = new ApiResponse<>();
-	        errorResponse.setSuccess(false);
-	        errorResponse.setMessage("An unexpected error occurred. Please try again later.");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-	    }
+	    } //catch (Exception e) {
+	    //     ApiResponse<String> errorResponse = new ApiResponse<>();
+	    //     errorResponse.setSuccess(false);
+	    //     errorResponse.setMessage("An unexpected error occurred. Please try again later.");
+	    //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	    // }
 	}
 
 	@PostMapping("/reset-password")
