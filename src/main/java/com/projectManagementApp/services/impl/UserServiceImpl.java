@@ -85,42 +85,63 @@ public class UserServiceImpl implements UserService{
 	
 	@Override
 	
-	public String forgotPassword(String email) throws ResourceNotFoundException {
-	    try {
-	        User user = this.userRepository.findByEmail(email)
-	                .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + email));
-	        
-	        Random rand = new Random();
-	        int otp = 1000 + rand.nextInt(9000);
-	        String token = UUID.randomUUID().toString();
-	        LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(10);
-	        
-	        PasswordResetToken resetToken = new PasswordResetToken();
-	        resetToken.setOtp(otp);
-	        resetToken.setToken(token);
-	        resetToken.setUser(user);
-	        resetToken.setExpirationTime(expirationTime);
-	        passwordResetTokenRepository.save(resetToken);
+@Override
+public String forgotPassword(String email) throws ResourceNotFoundException {
+    try {
+        log.info("Starting password reset process for email: {}", email);
+        
+        User user = this.userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email " + email));
+        
+        log.info("User found, generating OTP and token");
+        
+        Random rand = new Random();
+        int otp = 1000 + rand.nextInt(9000);
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(10);
+        
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setOtp(otp);
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpirationTime(expirationTime);
+        passwordResetTokenRepository.save(resetToken);
+        
+        log.info("Token saved, preparing to send email");
 
-	        // Create HTML email with styling
-	        MimeMessage message = javaMailSender.createMimeMessage();
-	        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-	        
-	        helper.setTo(email);
-	        helper.setSubject("🔐 Password Reset Request - Action Required");
-	        
-	        String htmlContent = createPasswordResetHtmlContent(user.getUsername(), otp, token);
-	        helper.setText(htmlContent, true); // true indicates HTML content
-	        
-	        javaMailSender.send(message);
-	        return token;
-	        
-	    } catch (ResourceNotFoundException e) {
-	        throw e;
-	    } catch (Exception e) {
-	        throw new RuntimeException("An unexpected error occurred. Please try again later.", e);
-	    }
-	}
+        // Create HTML email with styling
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        
+        helper.setFrom("devinsightt@gmail.com"); // ADD THIS - Important!
+        helper.setTo(email);
+        helper.setSubject("🔐 Password Reset Request - Action Required");
+        
+        log.info("Email helper configured, creating HTML content");
+        
+        String htmlContent = createPasswordResetHtmlContent(user.getUsername(), otp, token);
+        helper.setText(htmlContent, true);
+        
+        log.info("Attempting to send email to: {}", email);
+        javaMailSender.send(message);
+        log.info("Email sent successfully to: {}", email);
+        
+        return token;
+        
+    } catch (ResourceNotFoundException e) {
+        log.error("User not found: {}", email);
+        throw e;
+    } catch (MessagingException e) {
+        log.error("Email messaging error for {}: {}", email, e.getMessage(), e);
+        throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+    } catch (MailException e) {
+        log.error("Mail sending failed for {}: {}", email, e.getMessage(), e);
+        throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+    } catch (Exception e) {
+        log.error("Unexpected error in forgotPassword for {}: {}", email, e.getMessage(), e);
+        throw new RuntimeException("An unexpected error occurred: " + e.getMessage(), e);
+    }
+}
 	private String createPasswordResetHtmlContent(String username, int otp, String token) {
 	    String resetUrl = frontendUrl+"/reset-password?token=" + token;
 	    
