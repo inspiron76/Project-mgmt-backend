@@ -83,8 +83,6 @@ public class UserServiceImpl implements UserService{
 		return user;
 	}
 	
-	@Override
-	
 @Override
 public String forgotPassword(String email) throws ResourceNotFoundException {
     try {
