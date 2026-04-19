@@ -24,6 +24,7 @@ import com.projectManagementApp.services.UserService;
 
 @RestController
 @RequestMapping("/api/users")
+  
 @CrossOrigin(origins = {"http://localhost:5173", "https://splendorous-zuccutto-0b577e.netlify.app/","https://projectmanagentapp-6.onrender.com/"}, allowCredentials = "true")
 public class UserController {
 	
@@ -86,12 +87,12 @@ public class UserController {
 	        errorResponse.setMessage("Failed to send reset email. Please try again later.");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	            
-	    } catch (Exception e) {
-	        ApiResponse<String> errorResponse = new ApiResponse<>();
-	        errorResponse.setSuccess(false);
-	        errorResponse.setMessage("An unexpected error occurred. Please try again later.");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-	    }
+	    } //catch (Exception e) {
+	    //     ApiResponse<String> errorResponse = new ApiResponse<>();
+	    //     errorResponse.setSuccess(false);
+	    //     errorResponse.setMessage("An unexpected error occurred. Please try again later.");
+	    //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	    // }
 	}
 
 	@PostMapping("/reset-password")
