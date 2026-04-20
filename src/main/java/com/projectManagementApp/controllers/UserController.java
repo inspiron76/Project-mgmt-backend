@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.projectManagementApp.entities.User;
 import com.projectManagementApp.globalException.InvalidOtpException;
 import com.projectManagementApp.globalException.InvalidTokenException;
@@ -30,6 +34,8 @@ public class UserController {
 	
 	@Autowired
 	private UserService userService;
+
+	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 	
 	@GetMapping("/profile")
 	public ResponseEntity<ApiResponse<User>> getUserProfile() {
@@ -58,7 +64,6 @@ public class UserController {
 	            errorResponse.setMessage("Email is required");
 	            return ResponseEntity.badRequest().body(errorResponse);
 	        }
-
 	        // Email format validation
 	        if (!isValidEmail(request.getEmail())) {
 	            ApiResponse<String> errorResponse = new ApiResponse<>();
@@ -66,8 +71,12 @@ public class UserController {
 	            errorResponse.setMessage("Invalid email format");
 	            return ResponseEntity.badRequest().body(errorResponse);
 	        }
-
+	        
+	        log.info("Processing forgot password request for email: {}", request.getEmail()); // ADD THIS
+	        
 	        String token = userService.forgotPassword(request.getEmail());
+	        
+	        log.info("Password reset OTP generated successfully for: {}", request.getEmail()); // ADD THIS
 	        
 	        ApiResponse<String> response = new ApiResponse<>();
 	        response.setSuccess(true);
@@ -76,23 +85,37 @@ public class UserController {
 	        return ResponseEntity.ok(response);
 	            
 	    } catch (ResourceNotFoundException e) {
+	        log.error("User not found for password reset: {}", request.getEmail()); // ADD THIS
 	        ApiResponse<String> errorResponse = new ApiResponse<>();
 	        errorResponse.setSuccess(false);
 	        errorResponse.setMessage(e.getMessage());
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
 	            
 	    } catch (RuntimeException e) {
+	        log.error("RuntimeException in forgot-password for email: {}", request.getEmail(), e); // ADD THIS - logs full stack trace
 	        ApiResponse<String> errorResponse = new ApiResponse<>();
 	        errorResponse.setSuccess(false);
 	        errorResponse.setMessage("Failed to send reset email. Please try again later.");
+	        errorResponse.setData(e.getMessage()); // ADD THIS - return actual error in response for debugging
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	            
+<<<<<<< HEAD
 	    } //catch (Exception e) {
 	    //     ApiResponse<String> errorResponse = new ApiResponse<>();
 	    //     errorResponse.setSuccess(false);
 	    //     errorResponse.setMessage("An unexpected error occurred. Please try again later.");
 	    //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	    // }
+=======
+	    } catch (Exception e) {
+	        log.error("Unexpected exception in forgot-password for email: {}", request.getEmail(), e); // ADD THIS
+	        ApiResponse<String> errorResponse = new ApiResponse<>();
+	        errorResponse.setSuccess(false);
+	        errorResponse.setMessage("An unexpected error occurred. Please try again later.");
+	        errorResponse.setData(e.getMessage()); // ADD THIS
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	    }
+>>>>>>> 6cf14409e5be399db955f399ec43b2a44ca74dca
 	}
 
 	@PostMapping("/reset-password")
